@@ -10,7 +10,13 @@ import (
 )
 
 func Main() {
-	client := openai.NewClient(util.GetOpenAIKey())
+	key, err := util.GetOpenAIKey()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to get OpenAI key: %v\n", err)
+		os.Exit(1)
+	}
+
+	client := openai.NewClient(key)
 
 	if len(os.Args) < 2 {
 		fmt.Fprintf(os.Stderr, "Usage: %s <prompt-id> <message>\n", os.Args[0])
