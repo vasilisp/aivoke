@@ -25,13 +25,13 @@ func Main() {
 
 	prompt, err := util.PromptOfId(os.Args[1])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to get prompt: %v", err)
+		fmt.Fprintf(os.Stderr, "Failed to get prompt: %v\n", err)
 		os.Exit(1)
 	}
 
 	response, err := client.AskGPT(string(prompt), strings.Join(os.Args[2:], " "))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to get response: %v", err)
+		fmt.Fprintf(os.Stderr, "Failed to get response: %v\n", err)
 		os.Exit(1)
 	}
 
