@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+
+	"github.com/vasilisp/aivoke/internal/data"
 )
 
 func promptDir() (string, error) {
@@ -26,10 +28,9 @@ func PromptOfId(id string) ([]byte, error) {
 	}
 	promptPath := path.Join(promptDir, id)
 
-	content, err := os.ReadFile(promptPath)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to read prompt file: %v", err)
+	if _, err := os.Stat(promptPath); os.IsNotExist(err) {
+		return data.PromptFS.ReadFile(path.Join("prompts", id))
 	}
 
-	return content, nil
+	return os.ReadFile(promptPath)
 }
