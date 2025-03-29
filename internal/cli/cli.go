@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/vasilisp/aivoke/internal/openai"
+	"github.com/vasilisp/aivoke/internal/prompt"
 	"github.com/vasilisp/aivoke/internal/util"
 )
 
@@ -23,7 +24,7 @@ func Main() {
 		os.Exit(1)
 	}
 
-	prompt, err := util.PromptOfId(os.Args[1])
+	prompt, err := prompt.Build(os.Args[1], util.ParseArgs(os.Args[2:]))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get prompt: %v\n", err)
 		os.Exit(1)
