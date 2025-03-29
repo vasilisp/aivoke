@@ -14,8 +14,9 @@ func GetOpenAIKey() (string, error) {
 	return key, nil
 }
 
-func ParseArgs(args []string) map[string]string {
+func ParseArgs(args []string) (map[string]string, []string) {
 	result := make(map[string]string)
+	unused := make([]string, 0)
 
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
@@ -33,8 +34,10 @@ func ParseArgs(args []string) map[string]string {
 					result[key] = ""
 				}
 			}
+		} else {
+			unused = append(unused, arg)
 		}
 	}
 
-	return result
+	return result, unused
 }

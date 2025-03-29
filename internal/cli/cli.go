@@ -24,13 +24,15 @@ func Main() {
 		os.Exit(1)
 	}
 
-	prompt, err := prompt.Build(os.Args[1], util.ParseArgs(os.Args[2:]))
+	params, args := util.ParseArgs(os.Args[2:])
+
+	prompt, err := prompt.Build(os.Args[1], params)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get prompt: %v\n", err)
 		os.Exit(1)
 	}
 
-	response, err := client.AskGPT(string(prompt), strings.Join(os.Args[2:], " "))
+	response, err := client.AskGPT(string(prompt), strings.Join(args, " "))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get response: %v\n", err)
 		os.Exit(1)
