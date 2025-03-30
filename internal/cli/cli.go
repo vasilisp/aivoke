@@ -25,11 +25,21 @@ func Main() {
 	}
 
 	params, args := util.ParseArgs(os.Args[2:])
+	show := false
+	if value, ok := params["show"]; ok {
+		show = (value != "false" && value != "0")
+		delete(params, "show")
+	}
 
 	prompt, err := prompt.Build(os.Args[1], params)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get prompt: %v\n", err)
 		os.Exit(1)
+	}
+
+	if show {
+		fmt.Print(string(prompt))
+		os.Exit(0)
 	}
 
 	response, err := client.AskGPT(string(prompt), strings.Join(args, " "))
