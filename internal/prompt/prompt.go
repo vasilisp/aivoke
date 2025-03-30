@@ -33,14 +33,13 @@ func fullLocalPath(basename string) (string, error) {
 }
 
 func fileExists(fsys fs.FS, path string) bool {
-	// Type assert to fs.StatFS to use Stat()
-	if statFS, ok := fsys.(fs.StatFS); ok {
-		_, err := statFS.Stat(path)
-		return err == nil
+	file, err := fsys.Open(path)
+	if err != nil {
+		return false
 	}
 
-	// Fallback for non-StatFS implementations
-	return false
+	file.Close()
+	return true
 }
 
 func exists(basename string) (bool, error) {
