@@ -140,6 +140,7 @@ func Build(id string, args map[string]string) (Prompt, error) {
 			return emptyPrompt, fmt.Errorf("Failed to read prompt: %v", err)
 		}
 
+		util.Assert(config != nil, "Build nil config")
 		return Prompt{Content: content, Config: config}, nil
 	}
 
@@ -153,5 +154,6 @@ func Build(id string, args map[string]string) (Prompt, error) {
 		return emptyPrompt, fmt.Errorf("Failed to execute prompt template: %v", err)
 	}
 
+	util.Assert(config != nil, "Build nil config")
 	return Prompt{Content: content, Config: config}, nil
 }
