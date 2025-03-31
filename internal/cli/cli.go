@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -25,10 +26,16 @@ func Main() {
 	}
 
 	params, args := util.ParseArgs(os.Args[2:])
+
 	show := false
 	if value, ok := params["show"]; ok {
 		show = (value != "false" && value != "0")
 		delete(params, "show")
+	}
+
+	stdin := false
+	if len(args) == 0 {
+		stdin = true
 	}
 
 	pr, err := prompt.Build(os.Args[1], params)
@@ -42,7 +49,18 @@ func Main() {
 		os.Exit(0)
 	}
 
-	response, err := client.AskGPT(string(pr.Content), strings.Join(args, " "))
+	var userPrompt []byte
+	if stdin {
+		userPrompt, err = io.ReadAll(os.Stdin)
+		if err != nil {
+			fmt.Println("Error reading stdin:", err)
+			os.Exit(1)
+		}
+	} else {
+		userPrompt = []byte(strings.Join(args, " "))
+	}
+
+	response, err := client.AskGPT(string(pr.Content), string(userPrompt))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get response: %v\n", err)
 		os.Exit(1)
