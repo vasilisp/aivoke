@@ -31,21 +31,25 @@ func Main() {
 		delete(params, "show")
 	}
 
-	prompt, err := prompt.Build(os.Args[1], params)
+	pr, err := prompt.Build(os.Args[1], params)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get prompt: %v\n", err)
 		os.Exit(1)
 	}
 
 	if show {
-		fmt.Print(string(prompt.Content))
+		fmt.Print(string(pr.Content))
 		os.Exit(0)
 	}
 
-	response, err := client.AskGPT(string(prompt.Content), strings.Join(args, " "))
+	response, err := client.AskGPT(string(pr.Content), strings.Join(args, " "))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get response: %v\n", err)
 		os.Exit(1)
+	}
+
+	if pr.Config.Postprocess {
+		response = prompt.Postprocess(response)
 	}
 
 	fmt.Println(response)
