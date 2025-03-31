@@ -79,7 +79,7 @@ func readFromFS(fsys fs.FS, basename string, basenameJSON string) ([]byte, *Conf
 		}
 	}
 
-	return content, nil, nil
+	return content, &Config{}, nil
 }
 
 func read(basename string, template bool) ([]byte, *Config, error) {
