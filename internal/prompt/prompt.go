@@ -2,6 +2,7 @@ package prompt
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -13,6 +14,15 @@ import (
 )
 
 const dirBasename = ".aivoke"
+
+type Config struct {
+	Postprocess bool `json:"postprocess,omitempty"`
+}
+
+type Prompt struct {
+	Content []byte
+	Config  *Config
+}
 
 func dir() (string, error) {
 	homeDir, err := os.UserHomeDir()
@@ -28,7 +38,6 @@ func fullLocalPath(basename string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to get prompt directory: %v", err)
 	}
-
 	return path.Join(promptDir, basename), nil
 }
 
@@ -55,21 +64,46 @@ func exists(basename string) (bool, error) {
 	return fileExists(data.PromptFS, path.Join("prompts", basename)), nil
 }
 
-func read(basename string, template bool) ([]byte, error) {
+func readFromFS(fsys fs.FS, basename string, basenameJSON string) ([]byte, *Config, error) {
+	var config Config
+
+	content, err := fs.ReadFile(fsys, basename)
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed to read prompt: %v", err)
+	}
+
+	contentConfig, err := fs.ReadFile(fsys, basenameJSON)
+	if err == nil {
+		if err := json.Unmarshal(contentConfig, &config); err == nil {
+			return content, &config, nil
+		}
+	}
+
+	return content, nil, nil
+}
+
+func read(basename string, template bool) ([]byte, *Config, error) {
+	basenameJSON := basename + ".json"
 	if template {
 		basename = basename + ".tmpl"
 	}
 
-	promptPath, err := fullLocalPath(basename)
+	promptDir, err := dir()
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get prompt path: %v", err)
+		return nil, nil, fmt.Errorf("Failed to get prompt directory: %v", err)
 	}
 
-	if _, err := os.Stat(promptPath); err != nil {
-		return data.PromptFS.ReadFile(path.Join("prompts", basename))
+	var fsys fs.FS
+	if _, err := os.Stat(path.Join(promptDir, basename)); err != nil {
+		fsys, err = fs.Sub(data.PromptFS, "prompts")
+		if err != nil {
+			return nil, nil, fmt.Errorf("Failed to create embedded prompt FS: %v", err)
+		}
+	} else {
+		fsys = os.DirFS(promptDir)
 	}
 
-	return os.ReadFile(promptPath)
+	return readFromFS(fsys, basename, basenameJSON)
 }
 
 func ExecuteTemplate(tmplBytes []byte, args map[string]string) ([]byte, error) {
@@ -86,31 +120,38 @@ func ExecuteTemplate(tmplBytes []byte, args map[string]string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func Build(id string, args map[string]string) ([]byte, error) {
+func Build(id string, args map[string]string) (Prompt, error) {
+	var emptyPrompt Prompt
+
 	if err := util.ValidateID(id); err != nil {
-		return nil, fmt.Errorf("Invalid id: %v", err)
+		return emptyPrompt, fmt.Errorf("Invalid id: %v", err)
 	}
 
 	// prioritize plain prompts over templates and local over embedded
 
 	exists, err := exists(id)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to check if prompt exists: %v", err)
+		return emptyPrompt, fmt.Errorf("Failed to check if prompt exists: %v", err)
 	}
 
 	if exists {
-		content, err := read(id, false)
+		content, config, err := read(id, false)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to read prompt: %v", err)
+			return emptyPrompt, fmt.Errorf("Failed to read prompt: %v", err)
 		}
 
-		return content, nil
+		return Prompt{Content: content, Config: config}, nil
 	}
 
-	template, err := read(id, true)
+	template, config, err := read(id, true)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read prompt template: %v", err)
+		return emptyPrompt, fmt.Errorf("Failed to read prompt template: %v", err)
 	}
 
-	return ExecuteTemplate(template, args)
+	content, err := ExecuteTemplate(template, args)
+	if err != nil {
+		return emptyPrompt, fmt.Errorf("Failed to execute prompt template: %v", err)
+	}
+
+	return Prompt{Content: content, Config: config}, nil
 }

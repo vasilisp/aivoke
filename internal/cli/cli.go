@@ -38,11 +38,11 @@ func Main() {
 	}
 
 	if show {
-		fmt.Print(string(prompt))
+		fmt.Print(string(prompt.Content))
 		os.Exit(0)
 	}
 
-	response, err := client.AskGPT(string(prompt), strings.Join(args, " "))
+	response, err := client.AskGPT(string(prompt.Content), strings.Join(args, " "))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get response: %v\n", err)
 		os.Exit(1)
