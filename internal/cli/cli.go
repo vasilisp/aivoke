@@ -60,7 +60,7 @@ func Main() {
 		userPrompt = []byte(strings.Join(args, " "))
 	}
 
-	response, err := client.AskGPT(string(pr.Content), string(userPrompt))
+	response, err := client.AskGPT(string(pr.Content), string(userPrompt), pr.Config.Temperature)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get response: %v\n", err)
 		os.Exit(1)

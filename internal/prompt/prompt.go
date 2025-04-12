@@ -16,7 +16,8 @@ import (
 const dirBasename = ".aivoke"
 
 type Config struct {
-	Postprocess bool `json:"postprocess,omitempty"`
+	Postprocess bool     `json:"postprocess,omitempty"`
+	Temperature *float64 `json:"temperature,omitempty"`
 }
 
 type Prompt struct {

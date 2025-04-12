@@ -6,6 +6,7 @@ import (
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/packages/param"
 	"github.com/vasilisp/aivoke/internal/util"
 )
 
@@ -28,16 +29,22 @@ func extractGPTResponse(chatCompletion *openai.ChatCompletion) (string, error) {
 	return chatCompletion.Choices[0].Message.Content, nil
 }
 
-func (c Client) AskGPT(systemMessage string, userMessage string) (string, error) {
+func (c Client) AskGPT(systemMessage string, userMessage string, temperature *float64) (string, error) {
 	util.Assert(systemMessage != "", "AskGPT empty systemMessage")
 	util.Assert(userMessage != "", "AskGPT empty userMessage")
+
+	temperatureOpt := param.NullOpt[float64]()
+	if temperature != nil {
+		temperatureOpt = param.NewOpt(*temperature)
+	}
 
 	chatCompletion, err := c.client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(systemMessage),
 			openai.UserMessage(userMessage),
 		},
-		Model: openai.ChatModelGPT4o,
+		Model:       openai.ChatModelGPT4o,
+		Temperature: temperatureOpt,
 	})
 	if err != nil {
 		return "", fmt.Errorf("ChatCompletion error: %v", err)

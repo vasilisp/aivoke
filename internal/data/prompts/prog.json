@@ -1,1 +1,1 @@
-{ "postprocess": true }
+{ "postprocess": true, "temperature": 0.2 }
