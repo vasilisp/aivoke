@@ -43,7 +43,7 @@ func (c Client) AskGPT(systemMessage string, userMessage string, temperature *fl
 			openai.SystemMessage(systemMessage),
 			openai.UserMessage(userMessage),
 		},
-		Model:       openai.ChatModelGPT4o,
+		Model:       "gpt-4.1",
 		Temperature: temperatureOpt,
 	})
 	if err != nil {
